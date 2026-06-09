@@ -2,7 +2,7 @@
   "name": "s.aksonov/graphql-generator",
   "type": "app",
   "require": {
-    "php": "^8.1",
+    "php": "^8.4",
     "ext-mbstring": "*",
     "symfony/console": "^7.1",
     "symfony/yaml": "^7.1",
