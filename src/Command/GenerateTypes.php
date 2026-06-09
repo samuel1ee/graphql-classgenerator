@@ -6,6 +6,7 @@ namespace Aksonov\GraphqlGenerator\Command;
 use Aksonov\GraphqlGenerator\FileWriter;
 use Aksonov\GraphqlGenerator\SchemaFetcher;
 use Aksonov\GraphqlGenerator\SchemaParser;
+use Aksonov\GraphqlGenerator\Types\PhpFieldType;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -52,6 +53,8 @@ final class GenerateTypes extends Command
 
         $output->writeln('<info>Generating GraphQL Types</info>');
 
+        $globalScalars = $config['scalars'] ?? [];
+
         foreach ($config['sources'] as $apiType => $params) {
             $this->writeVerbose($input, $output, '<info>Generating GraphQL Types for ' . $apiType . '</info>');
             $schema = $this->schemaFetcher->getSchema($params['url'], $params['headers'] ?? []);
@@ -59,8 +62,14 @@ final class GenerateTypes extends Command
 
             $this->fileWriter->emptyDir($outDir);
 
+            $scalarMap = array_merge(
+                PhpFieldType::BUILTIN_SCALARS,
+                $globalScalars,
+                $params['scalars'] ?? [],
+            );
+
             foreach ($this->schemaParser->denormalizeSchema($schema) as $type) {
-                $content = $this->fileWriter->typeToClass($params['namespace'], $type);
+                $content = $this->fileWriter->typeToClass($params['namespace'], $type, $scalarMap);
 
                 file_put_contents(
                     sprintf("%s/%s.php", $outDir, $type->name),

@@ -9,6 +9,14 @@ use Aksonov\GraphqlGenerator\Types\SchemaTypes\TypeKind;
 
 class PhpFieldType
 {
+    public const BUILTIN_SCALARS = [
+        'Int'     => 'int',
+        'Float'   => 'float',
+        'String'  => 'string',
+        'ID'      => 'string',
+        'Boolean' => 'bool',
+    ];
+
     private const RESERVED = [
         '__halt_compiler',
         'abstract',
@@ -80,14 +88,17 @@ class PhpFieldType
     ) {
     }
 
-    public static function parseGraphQLFieldType(Type $type, $nullable = true): PhpFieldType
+    /**
+     * @param array<string, string> $scalarMap  GraphQL scalar name → PHP type string
+     */
+    public static function parseGraphQLFieldType(Type $type, array $scalarMap, bool $nullable = true): PhpFieldType
     {
         if ($type->kind === TypeKind::NON_NULL) {
-            return self::parseGraphQLFieldType($type->ofType, false);
+            return self::parseGraphQLFieldType($type->ofType, $scalarMap, false);
         }
 
         if ($type->kind === TypeKind::LIST) {
-            $ofType = self::parseGraphQLFieldType($type->ofType);
+            $ofType = self::parseGraphQLFieldType($type->ofType, $scalarMap);
 
             $name = str_replace('|', '[]|', $ofType->name);
 
@@ -107,7 +118,7 @@ class PhpFieldType
         if (($type->kind === TypeKind::UNION || $type->kind === TypeKind::INTERFACE) && $type->possibleTypes) {
             $names = [];
             foreach ($type->possibleTypes as $possibleType) {
-                $names[] = self::parseGraphQLFieldType($possibleType, false)->name;
+                $names[] = self::parseGraphQLFieldType($possibleType, $scalarMap, false)->name;
             }
 
             $name = implode('|', array_unique($names));
@@ -122,17 +133,7 @@ class PhpFieldType
             );
         }
 
-        $name = match ($type->name) {
-            'Int', 'UnsignedInt64', 'BigInt' => 'int',
-            'Float' => 'float',
-            'Date', 'ISO8601DateTime', 'DateTime', 'ID',
-            'URL', 'String', 'FormattedString', 'HTML',
-            'ARN', 'UtcOffset', 'Color', 'StorefrontID' => 'string',
-            'Decimal', 'Money' => 'float|string',
-            'Boolean' => 'bool',
-            'JSON' => 'mixed',
-            default => $type->name,
-        };
+        $name = $scalarMap[$type->name] ?? $type->name;
 
         if ($nullable && $name !== 'mixed') {
             $name .= '|null';

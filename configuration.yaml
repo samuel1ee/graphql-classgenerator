@@ -1,3 +1,20 @@
+scalars:
+  UnsignedInt64: int
+  BigInt: int
+  Date: string
+  ISO8601DateTime: string
+  DateTime: string
+  URL: string
+  FormattedString: string
+  HTML: string
+  ARN: string
+  UtcOffset: string
+  Color: string
+  StorefrontID: string
+  Decimal: 'float|string'
+  Money: 'float|string'
+  JSON: mixed
+
 sources:
   AdminApi:
     namespace: Shopify\Types\AdminApi

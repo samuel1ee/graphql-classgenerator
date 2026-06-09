@@ -11,7 +11,10 @@ use Aksonov\GraphqlGenerator\Utils\DescriptionProcessor;
 
 final class FileWriter
 {
-    public function typeToClass(string $namespace, Type $type): string
+    /**
+     * @param array<string, string> $scalarMap  GraphQL scalar name → PHP type string
+     */
+    public function typeToClass(string $namespace, Type $type, array $scalarMap): string
     {
         $classContent = "<?php\n\ndeclare(strict_types=1);\n\n";
         $classContent .= "namespace $namespace;\n\n";
@@ -24,9 +27,9 @@ final class FileWriter
 
         return match ($type->kind) {
             TypeKind::ENUM => $classContent . $this->getEnumContent($type),
-            TypeKind::OBJECT => $classContent . $this->getClassContent($type),
-            TypeKind::INTERFACE =>  $classContent . $this->getInterfaceContent($type),
-            TypeKind::INPUT_OBJECT => $classContent . $this->getInputObjectContent($type),
+            TypeKind::OBJECT => $classContent . $this->getClassContent($type, $scalarMap),
+            TypeKind::INTERFACE =>  $classContent . $this->getInterfaceContent($type, $scalarMap),
+            TypeKind::INPUT_OBJECT => $classContent . $this->getInputObjectContent($type, $scalarMap),
             default => '',
         };
     }
@@ -54,7 +57,10 @@ final class FileWriter
         }
     }
 
-    private function getClassContent(Type $type): string
+    /**
+     * @param array<string, string> $scalarMap
+     */
+    private function getClassContent(Type $type, array $scalarMap): string
     {
         $classContent = "*/\n";
 
@@ -67,7 +73,7 @@ final class FileWriter
         $classContent .= "class {$type->name}{$implements}\n{\n";
 
         foreach ($type->fields ?? [] as $field) {
-            $fieldType = PhpFieldType::parseGraphQLFieldType($field->type);
+            $fieldType = PhpFieldType::parseGraphQLFieldType($field->type, $scalarMap);
 
             if ($field->isDeprecated) {
                 $classContent .= "    #[\Deprecated(message: \"{$field->deprecationReason}\")]\n";
@@ -100,13 +106,16 @@ final class FileWriter
         return $classContent;
     }
 
-    private function getInputObjectContent(Type $type): string
+    /**
+     * @param array<string, string> $scalarMap
+     */
+    private function getInputObjectContent(Type $type, array $scalarMap): string
     {
         $docBlock = '';
         $props = '';
 
         foreach ($type->inputFields ?? [] as $field) {
-            $fieldType = PhpFieldType::parseGraphQLFieldType($field->type);
+            $fieldType = PhpFieldType::parseGraphQLFieldType($field->type, $scalarMap);
             $docBlock .= "    * @param {$fieldType->doctype} \$$field->name\n";
             $props .= "        public {$fieldType->name} \$$field->name,\n";
         }
@@ -120,11 +129,14 @@ final class FileWriter
         return $classContent;
     }
 
-    private function getInterfaceContent(Type $type): string
+    /**
+     * @param array<string, string> $scalarMap
+     */
+    private function getInterfaceContent(Type $type, array $scalarMap): string
     {
         $classContent = "\n";
         foreach ($type->fields ?? [] as $field) {
-            $fieldType = PhpFieldType::parseGraphQLFieldType($field->type);
+            $fieldType = PhpFieldType::parseGraphQLFieldType($field->type, $scalarMap);
 
             $classContent .= " * @property {$fieldType->name} \$$field->name;\n";
         }
