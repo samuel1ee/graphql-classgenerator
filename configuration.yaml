@@ -1,0 +1,10 @@
+sources:
+  AdminApi:
+    namespace: Shopify\Types\AdminApi
+    url: https://shopify.dev/admin-graphql-direct-proxy/2026-04
+    extensions:
+      - ./custom.graphql
+
+  StorefrontApi:
+    namespace: Shopify\Types\StorefrontApi
+    url: https://shopify.dev/storefront-graphql-direct-proxy/2026-04

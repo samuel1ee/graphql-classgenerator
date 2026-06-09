@@ -1,0 +1,19 @@
+{
+  "name": "s.aksonov/graphql-generator",
+  "type": "app",
+  "require": {
+    "php": "^8.1",
+    "ext-mbstring": "*",
+    "symfony/console": "^7.1",
+    "symfony/yaml": "^7.1",
+    "symfony/http-client": "^7.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Aksonov\\GraphqlGenerator\\": "src/"
+    }
+  },
+  "require-dev": {
+    "squizlabs/php_codesniffer": "@stable"
+  }
+}

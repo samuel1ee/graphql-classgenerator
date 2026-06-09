@@ -1,0 +1,16 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+require __DIR__ . '/../vendor/autoload.php';
+
+use Aksonov\GraphqlGenerator\Command\GenerateConfig;
+use Aksonov\GraphqlGenerator\Command\GenerateTypes;
+use Symfony\Component\Console\Application;
+
+$app = new Application();
+
+$app->add(new GenerateTypes());
+$app->add(new GenerateConfig());
+$app->run();

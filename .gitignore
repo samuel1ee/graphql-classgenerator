@@ -1,0 +1,7 @@
+/src/lib/schema.json
+composer.lock
+.idea
+generated
+vendor
+schema
+./configuration.yaml
