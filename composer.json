@@ -15,5 +15,10 @@
   },
   "require-dev": {
     "squizlabs/php_codesniffer": "@stable"
+  },
+  "scripts": {
+    "generate": "php bin/console generate:types",
+    "generate:config": "php bin/console generate:config",
+    "cs": "phpcs"
   }
 }
