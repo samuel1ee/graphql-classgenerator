@@ -31,7 +31,7 @@ query IntrospectionQuery {
       }
       interfaces {
         kind
-        name      
+        name
       }
       fields(includeDeprecated: true) {
         name
@@ -112,15 +112,14 @@ query IntrospectionQuery {
 GQL;
     private readonly HttpClientInterface $client;
 
-    public function __construct()
+    public function __construct(?HttpClientInterface $client = null)
     {
-        $this->client = HttpClient::create();
+        $this->client = $client ?? HttpClient::create();
     }
 
     /**
-     * @param string $endpoint
      * @param array<string, string> $headers
-     * @return array
+     * @return array<string, array<string, mixed>>
      *
      * @throws ClientExceptionInterface
      * @throws RedirectionExceptionInterface
@@ -129,24 +128,32 @@ GQL;
      */
     public function getSchema(string $endpoint, array $headers = []): array
     {
-        $schema = $this->fetchGraphQLSchema($endpoint, $headers);
-        $decoded = json_decode($schema, true);
-        $schema = [];
+        $body = $this->fetchGraphQLSchema($endpoint, $headers);
+        $decoded = json_decode($body, true);
 
+        if (!is_array($decoded)) {
+            throw new \RuntimeException('GraphQL response is not valid JSON.');
+        }
+
+        /** @var array{data: array{__schema: array{types: list<array<string, mixed>>}}} $decoded */
+        $schema = [];
         foreach ($decoded['data']['__schema']['types'] as $type) {
-            $schema[$type['name']] = $type;
+            if (isset($type['name']) && is_string($type['name'])) {
+                $schema[$type['name']] = $type;
+            }
         }
 
         return $schema;
     }
 
     /**
+     * @param array<string, string> $headers
      * @throws RedirectionExceptionInterface
      * @throws ClientExceptionInterface
      * @throws TransportExceptionInterface
      * @throws ServerExceptionInterface
      */
-    private function fetchGraphQLSchema($endpoint, $headers = []): string
+    private function fetchGraphQLSchema(string $endpoint, array $headers = []): string
     {
         $response = $this->client->request('POST', $endpoint, [
             'headers' => [

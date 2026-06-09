@@ -9,6 +9,7 @@ use Aksonov\GraphqlGenerator\Types\SchemaTypes\TypeKind;
 
 class PhpFieldType
 {
+    /** @var array<string, string> */
     public const BUILTIN_SCALARS = [
         'Int'     => 'int',
         'Float'   => 'float',
@@ -17,6 +18,7 @@ class PhpFieldType
         'Boolean' => 'bool',
     ];
 
+    /** @var list<string> */
     private const RESERVED = [
         '__halt_compiler',
         'abstract',
@@ -94,10 +96,16 @@ class PhpFieldType
     public static function parseGraphQLFieldType(Type $type, array $scalarMap, bool $nullable = true): PhpFieldType
     {
         if ($type->kind === TypeKind::NON_NULL) {
+            if ($type->ofType === null) {
+                throw new \LogicException('NON_NULL type must have an ofType.');
+            }
             return self::parseGraphQLFieldType($type->ofType, $scalarMap, false);
         }
 
         if ($type->kind === TypeKind::LIST) {
+            if ($type->ofType === null) {
+                throw new \LogicException('LIST type must have an ofType.');
+            }
             $ofType = self::parseGraphQLFieldType($type->ofType, $scalarMap);
 
             $name = str_replace('|', '[]|', $ofType->name);
@@ -131,6 +139,10 @@ class PhpFieldType
                 $name,
                 $name,
             );
+        }
+
+        if ($type->name === null) {
+            throw new \LogicException('Scalar/Object type must have a name.');
         }
 
         $name = $scalarMap[$type->name] ?? $type->name;

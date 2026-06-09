@@ -5,3 +5,5 @@ generated
 vendor
 schema
 ./configuration.yaml
+.phpunit.cache/
+.phpunit.result.cache

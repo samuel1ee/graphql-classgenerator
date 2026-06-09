@@ -66,7 +66,7 @@ final class FileWriter
 
         $implements = '';
         if ($type->interfaces) {
-            $names = array_map(fn($t) => $t->name, $type->interfaces);
+            $names = array_map(fn (Type $t): string => (string) $t->name, $type->interfaces);
             $implements = ' implements ' . implode(', ', $names);
         }
 
@@ -91,7 +91,7 @@ final class FileWriter
         $classContent = "*/\n";
         $classContent .= "enum {$type->name}: string\n{\n";
 
-        foreach ($type->enumValues as $enumValue) {
+        foreach ($type->enumValues ?? [] as $enumValue) {
             if ($enumValue->description) {
                 $classContent .= "    /**\n";
                 foreach (DescriptionProcessor::processDescription(trim($enumValue->description)) as $line) {

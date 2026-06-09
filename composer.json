@@ -13,12 +13,27 @@
       "Aksonov\\GraphqlGenerator\\": "src/"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "Aksonov\\GraphqlGenerator\\Tests\\": "tests/"
+    }
+  },
   "require-dev": {
-    "squizlabs/php_codesniffer": "@stable"
+    "squizlabs/php_codesniffer": "@stable",
+    "phpunit/phpunit": "^12",
+    "phpstan/phpstan": "^2",
+    "phpstan/phpstan-phpunit": "^2"
   },
   "scripts": {
     "generate": "php bin/console generate:types",
     "generate:config": "php bin/console generate:config",
-    "cs": "phpcs"
+    "cs": "phpcs",
+    "test": "phpunit",
+    "stan": "phpstan analyse",
+    "check": [
+      "@cs",
+      "@stan",
+      "@test"
+    ]
   }
 }

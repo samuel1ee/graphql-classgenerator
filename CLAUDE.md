@@ -68,16 +68,34 @@ php bin/console generate:types [-c path/to/config.yaml] [output-dir] [-v]
 # Interactive config wizard
 php bin/console generate:config
 
-# Lint
-vendor/bin/phpcs
+# Run all quality checks
+composer check      # cs + stan + test
+
+composer cs         # phpcs PSR-12 (config: phpcs.xml.dist)
+composer stan       # phpstan level max (config: phpstan.neon → phpstan.neon.dist)
+composer test       # phpunit (config: phpunit.xml.dist)
 ```
+
+## Tests
+
+Tests live in `tests/` (namespace `Aksonov\GraphqlGenerator\Tests\`):
+
+| File | Covers |
+|------|--------|
+| `PhpFieldTypeTest` | scalar map lookup, NON_NULL/LIST/UNION, `escape()` |
+| `SchemaParserTest` | filtering, denormalization, reserved-name escape |
+| `DescriptionProcessorTest` | word-wrap, multi-line split |
+| `FileWriterTest` | all four type kinds, `emptyDir` |
+| `SchemaFetcherTest` | `MockHttpClient` — schema keying, non-200 throw |
+
+`SchemaFetcher` accepts an optional `HttpClientInterface` in its constructor for injection in tests.
 
 ## Conventions
 
 - `declare(strict_types=1)` in every file
 - Classes are `final` where possible
 - Constructor property promotion throughout DTOs
-- PSR-4: `Aksonov\GraphqlGenerator\` → `src/`
+- PSR-4: `Aksonov\GraphqlGenerator\` → `src/`, `Aksonov\GraphqlGenerator\Tests\` → `tests/`
 
 ## Gotchas
 
@@ -85,6 +103,6 @@ vendor/bin/phpcs
   run** — never put hand-edited files there
 - The introspection query in `SchemaFetcher` hardcodes `ofType` nesting to 4
   levels; deeply nested wrapper types beyond that are silently truncated
-- No test suite exists — verify by running the generator and inspecting output
 - PHP reserved words in type names are auto-escaped (`list` → `listType`, etc.)
   via `PhpFieldType::escape()`
+- CI runs on PHP 8.4 via `.github/workflows/ci.yml`
