@@ -9,12 +9,13 @@ use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use RuntimeException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class SchemaFetcher
 {
     // language=GraphQL
-    private const QUERY = <<<'GQL'
+    private const string QUERY = <<<'GQL'
 query IntrospectionQuery {
   __schema {
     types {
@@ -132,7 +133,7 @@ GQL;
         $decoded = json_decode($body, true);
 
         if (!is_array($decoded)) {
-            throw new \RuntimeException('GraphQL response is not valid JSON.');
+            throw new RuntimeException('GraphQL response is not valid JSON.');
         }
 
         /** @var array{data: array{__schema: array{types: list<array<string, mixed>>}}} $decoded */
@@ -164,7 +165,7 @@ GQL;
         ]);
 
         if ($response->getStatusCode() !== 200) {
-            throw new \Exception('Error fetching schema: ' . $response->getContent());
+            throw new RuntimeException('Error fetching schema: ' . $response->getContent());
         }
 
         return $response->getContent();
