@@ -99,7 +99,7 @@ final class FileWriterTest extends TestCase
 
         $output = $this->writer->typeToClass('NS', $type, $this->scalarMap);
 
-        $this->assertStringContainsString('#[\Deprecated(message: "Use newName instead.")]', $output);
+        $this->assertStringContainsString('@deprecated Use newName instead.', $output);
     }
 
     // ── INPUT_OBJECT ─────────────────────────────────────────────────────────

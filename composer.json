@@ -1,6 +1,7 @@
 {
   "name": "s.aksonov/graphql-generator",
-  "type": "app",
+  "type": "library",
+  "bin": ["bin/console"],
   "require": {
     "php": "^8.4",
     "ext-mbstring": "*",

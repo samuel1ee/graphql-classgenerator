@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Aksonov\GraphqlGenerator;
 
 use Aksonov\GraphqlGenerator\Types\PhpFieldType;
+use Aksonov\GraphqlGenerator\Types\SchemaTypes\Field;
+use Aksonov\GraphqlGenerator\Types\SchemaTypes\InputField;
 use Aksonov\GraphqlGenerator\Types\SchemaTypes\Type;
 use Aksonov\GraphqlGenerator\Types\SchemaTypes\TypeKind;
 use Aksonov\GraphqlGenerator\Utils\DescriptionProcessor;
@@ -74,11 +76,7 @@ final class FileWriter
 
         foreach ($type->fields ?? [] as $field) {
             $fieldType = PhpFieldType::parseGraphQLFieldType($field->type, $scalarMap);
-
-            if ($field->isDeprecated) {
-                $classContent .= "    #[\Deprecated(message: \"{$field->deprecationReason}\")]\n";
-            }
-            $classContent .= "    /** @var {$fieldType->doctype} \$$field->name */\n";
+            $classContent .= $this->renderFieldDocblock('    ', $fieldType->doctype, $field->name, $field);
             $classContent .= "    public {$fieldType->name} \$$field->name;\n";
         }
         $classContent .= "}\n";
@@ -116,7 +114,16 @@ final class FileWriter
 
         foreach ($type->inputFields ?? [] as $field) {
             $fieldType = PhpFieldType::parseGraphQLFieldType($field->type, $scalarMap);
-            $docBlock .= "    * @param {$fieldType->doctype} \$$field->name\n";
+            $docBlock .= "    * @param {$fieldType->doctype} \$$field->name";
+            if ($field->description) {
+                $docBlock .= ' ' . $field->description;
+            }
+            $docBlock .= "\n";
+            if ($field->isDeprecated && $field->deprecationReason !== null) {
+                foreach (DescriptionProcessor::processDescription($field->deprecationReason) as $line) {
+                    $docBlock .= "    * @deprecated $line\n";
+                }
+            }
             $props .= "        public {$fieldType->name} \$$field->name,\n";
         }
         $classContent = "*/\n";
@@ -138,12 +145,55 @@ final class FileWriter
         foreach ($type->fields ?? [] as $field) {
             $fieldType = PhpFieldType::parseGraphQLFieldType($field->type, $scalarMap);
 
-            $classContent .= " * @property {$fieldType->name} \$$field->name;\n";
+            $classContent .= " * @property {$fieldType->name} \$$field->name";
+            if ($field->description) {
+                $classContent .= ' ' . $field->description;
+            }
+            $classContent .= "\n";
         }
 
         $classContent .= "*/\ninterface {$type->name}\n{\n";
         $classContent .= "}\n";
 
         return $classContent;
+    }
+
+    /**
+     * Renders a properly formatted docblock for a property field.
+     * Uses single-line format when there is nothing extra, multi-line otherwise.
+     */
+    private function renderFieldDocblock(
+        string $indent,
+        string $doctype,
+        string $name,
+        Field $field,
+    ): string {
+        $descLines = $field->description
+            ? DescriptionProcessor::processDescription($field->description)
+            : [];
+
+        $deprecationLines = ($field->isDeprecated && $field->deprecationReason !== null)
+            ? DescriptionProcessor::processDescription($field->deprecationReason)
+            : [];
+
+        if ($descLines === [] && $deprecationLines === []) {
+            return "$indent/** @var $doctype \$$name */\n";
+        }
+
+        $doc = "$indent/**\n";
+        foreach ($descLines as $line) {
+            $doc .= "$indent * $line\n";
+        }
+        $doc .= "$indent * @var $doctype \$$name\n";
+        if ($deprecationLines !== []) {
+            $first = array_shift($deprecationLines);
+            $doc .= "$indent * @deprecated $first\n";
+            foreach ($deprecationLines as $line) {
+                $doc .= "$indent *   $line\n";
+            }
+        }
+        $doc .= "$indent */\n";
+
+        return $doc;
     }
 }

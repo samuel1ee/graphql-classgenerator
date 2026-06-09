@@ -3,14 +3,22 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/../vendor/autoload.php';
+// Supports both standalone usage and installation as a Composer dependency.
+foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../vendor/autoload.php'] as $autoload) {
+    if (file_exists($autoload)) {
+        require $autoload;
+        break;
+    }
+}
 
 use Aksonov\GraphqlGenerator\Command\GenerateConfig;
 use Aksonov\GraphqlGenerator\Command\GenerateTypes;
+use Aksonov\GraphqlGenerator\Command\VersionResolve;
 use Symfony\Component\Console\Application;
 
 $app = new Application();
 
 $app->add(new GenerateTypes());
 $app->add(new GenerateConfig());
+$app->add(new VersionResolve());
 $app->run();
